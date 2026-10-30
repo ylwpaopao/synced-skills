@@ -35,12 +35,14 @@
 - [x] Write real-Git integration tests for copying, deletion, no-op runs, failure preservation, unsafe input and weekly activity. Run `bun test`; observe missing implementation failures.
 - [x] Implement the sync script, manifest, pinned workflow and concise Chinese README.
 - [x] Run `bun test`; expect every test to pass. Sync the actual Gitea source and compare all upstream skill files and LICENSE byte-for-byte.
-- [x] Get a fresh review and resolve material findings with regression tests. All 12 tests pass; commit after final checks.
+- [x] Get a fresh review, resolve material findings with regression tests, verify and commit. All 12 tests pass locally and on GitHub Actions.
 
 ### Task 2: Publish and verify GitHub
 
 **Consumes:** Tested repository and synced `skills/gt`.
 **Produces:** Public GitHub source and successful workflow run.
 
-- [ ] Create the authorized repository with `gh repo create`, push `main`, manually dispatch synchronization, and inspect its conclusion and logs.
-- [ ] Verify published source metadata and contents. Report repository URL, schedule, extension point and any remaining limitations. CC Switch operations remain with the user.
+- [x] Create the authorized repository, publish `main`, manually dispatch synchronization, and inspect its conclusion and logs.
+- [x] Verify published source metadata, contents and automated writeback. The integration run [40994643371](https://github.com/ylwpaopao/synced-skills/actions/runs/40994643371) passed 12 tests and generated commit `71a7ad9` through `github-actions[bot]`. CC Switch operations remain with the user.
+
+The local GitHub CLI OAuth token lacked `workflow` scope. The existing GitHub connector created the workflow file with its already-authorized permissions; the remaining content was then pushed normally. No authorization scope was expanded. The workflow-only initialization run reported `No tests found`; complete-repository runs passed.
