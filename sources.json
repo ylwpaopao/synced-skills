@@ -1,0 +1,9 @@
+[
+  {
+    "id": "gt",
+    "repository": "https://gitea.com/gitea/cli.git",
+    "ref": "main",
+    "path": "skills/gt",
+    "license": "LICENSE"
+  }
+]
