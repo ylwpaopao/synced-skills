@@ -1,7 +1,7 @@
 # synced-skills
 
 专门同步其他仓库的 Agent Skills，供 CC Switch 统一安装和更新。
-这里保存上游副本，同步工具不修改 skill 的原文。
+这里保存上游副本，skill 目录的结构、文件内容和可执行权限均保持上游原样，不向其中注入任何文件。
 
 ## 已同步的 skill
 
@@ -51,8 +51,9 @@ CC Switch 更新技能时会覆盖本地副本，需要修改内容时请向上�
 - `path`：含有 `SKILL.md` 的目录；在仓库根目录时填 `.`。
 - `license`：适用于该 skill 的上游许可证文件，相对于上游仓库根目录。
 
-整份 skill 复制到 `skills/<id>/`，许可证复制到其中的 `LICENSE`。
-不跟随符号链接，不运行上游代码。来源条目删除后，原有目录及来源记录会保留；彻底移除时同时删除对应的 `skills/<id>/`，下次同步会清除其来源记录。
+整份 skill 原样复制到 `skills/<id>/`，补充许可证单独保存在 `licenses/<id>/LICENSE`，与 skill 目录分离。
+skill 目录完全按上游当前版本同步；上游自带的许可证也原样保留，不替换为仓库级许可证。
+不跟随符号链接，不运行上游代码。来源条目删除后，原有目录及来源记录会保留；彻底移除时同时删除对应的 `skills/<id>/` 和 `licenses/<id>/`，下次同步会清除其来源记录。
 
 本地运行（需要 Git 和 Bun 1.4.4）：
 
@@ -63,6 +64,6 @@ bun run sync
 
 ## 许可证与来源
 
-每个 skill 沿用其上游许可证，见各自目录中的 `LICENSE`。
+每个 skill 沿用其上游许可证，补充许可证见 `licenses/<id>/LICENSE`，不写入 skill 目录。
 同步时的上游 commit 记录在 `sources.lock.json`，可据此核对原始内容。
 本仓库的同步工具采用 [MIT License](LICENSE)。

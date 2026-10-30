@@ -18,8 +18,11 @@ The chosen name is `synced-skills`.
 - `sources.json` lists the upstream repository, branch/tag/commit, skill path,
   license path and unique local skill ID. Adding a source needs one new entry.
 - Initially sync `https://gitea.com/gitea/cli.git`, `main`, `skills/gt`.
-- Preserve every file in the upstream skill directory and copy its upstream
-  license into that directory. Never execute upstream code or modify skill prose.
+- Preserve the upstream skill directory's exact structure, file bytes and
+  executable permissions. Do not inject or overwrite any files in it, including
+  licenses. Supplemental upstream licensing belongs in `licenses/<id>/LICENSE`,
+  outside `skills/<id>/`. Keep any license already present in the upstream skill
+  unchanged. Never execute upstream code or modify skill prose.
 - Store upstream commit provenance in `sources.lock.json`, outside skill folders.
 - Validate all sources before replacing installed copies. Propagate upstream file
   deletions within each configured skill; leave unconfigured directories alone.

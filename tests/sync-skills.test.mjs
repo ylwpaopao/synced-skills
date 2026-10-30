@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -48,16 +48,46 @@ function run(root) {
   return spawnSync(process.execPath, [script, root], { encoding: "utf8", timeout: 30000 });
 }
 
-test("copies the complete skill, license and executable mode without unrelated application code", () => {
+function snapshot(directory, prefix = "") {
+  return readdirSync(directory, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).flatMap((entry) => {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const path = join(directory, entry.name);
+    return entry.isDirectory()
+      ? [{ path: relative, type: "directory" }, ...snapshot(path, relative)]
+      : [{ path: relative, type: "file", bytes: readFileSync(path).toString("hex"), executable: statSync(path).mode & 0o111 }];
+  });
+}
+
+test("copies exactly the upstream skill tree and keeps supplemental licensing outside it", () => {
   const { upstream, root } = fixture();
   const result = run(root);
   expect(result.status, result.stderr).toBe(0);
   expect(readFileSync(join(root, "skills/demo/SKILL.md"), "utf8")).toBe(readFileSync(join(upstream, "skills/demo/SKILL.md"), "utf8"));
   expect(readFileSync(join(root, "skills/demo/references/nested.md"), "utf8")).toBe("Reference content.\n");
-  expect(readFileSync(join(root, "skills/demo/LICENSE"), "utf8")).toBe("Upstream license.\n");
+  expect(snapshot(join(root, "skills/demo"))).toEqual(snapshot(join(upstream, "skills/demo")));
+  expect(existsSync(join(root, "licenses/demo/LICENSE"))).toBe(true);
+  expect(readFileSync(join(root, "licenses/demo/LICENSE"), "utf8")).toBe("Upstream license.\n");
   expect(statSync(join(root, "skills/demo/scripts/run.sh")).mode & 0o111).not.toBe(0);
   expect(existsSync(join(root, "skills/demo/application.go"))).toBe(false);
   expect(JSON.parse(readFileSync(join(root, "sources.lock.json"), "utf8")).sources.demo.commit).toBe(git(upstream, "rev-parse", "HEAD"));
+});
+
+test("preserves an original skill license without overwriting it with the repository license", () => {
+  const { upstream, root } = fixture();
+  file(join(upstream, "skills/demo/LICENSE"), "Original skill-specific license.\n");
+  git(upstream, "add", ".");
+  git(upstream, "commit", "-m", "Add the skill's own license");
+  expect(run(root).status).toBe(0);
+  expect(readFileSync(join(root, "skills/demo/LICENSE"), "utf8")).toBe("Original skill-specific license.\n");
+  expect(snapshot(join(root, "skills/demo"))).toEqual(snapshot(join(upstream, "skills/demo")));
+});
+
+test("repairs existing copies by removing previously injected files", () => {
+  const { upstream, root } = fixture();
+  file(join(root, "skills/demo/LICENSE"), "Previously injected license.\n");
+  file(join(root, "skills/demo/sync-metadata.json"), "{}\n");
+  expect(run(root).status).toBe(0);
+  expect(snapshot(join(root, "skills/demo"))).toEqual(snapshot(join(upstream, "skills/demo")));
 });
 
 test("synchronizes SHA-256 upstream repositories such as the official Gitea CLI", () => {
@@ -120,7 +150,7 @@ test("rejects upstream symlinks without overwriting the installed skill", () => 
   git(upstream, "commit", "-m", "Add a symlink");
   expect(run(root).status).not.toBe(0);
   expect(existsSync(join(root, "skills/demo/linked-license"))).toBe(false);
-  expect(readFileSync(join(root, "skills/demo/LICENSE"), "utf8")).toBe("Upstream license.\n");
+  expect(readFileSync(join(root, "licenses/demo/LICENSE"), "utf8")).toBe("Upstream license.\n");
 });
 
 test.each([
@@ -139,10 +169,10 @@ test.each([
   }
 });
 
-test("rejects dangling output symlinks before creating an external target", () => {
+test.each(["sources.lock.json", "licenses"])("rejects a dangling %s output symlink before creating an external target", (output) => {
   const { root } = fixture();
   const outside = join(root, "../must-not-be-created.json");
-  symlinkSync(outside, join(root, "sources.lock.json"));
+  symlinkSync(outside, join(root, output));
   const result = run(root);
   expect(result.status).not.toBe(0);
   expect(existsSync(outside)).toBe(false);

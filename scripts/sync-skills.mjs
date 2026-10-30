@@ -56,8 +56,9 @@ export function syncSkills(root, date = new Date()) {
   const sources = JSON.parse(readFileSync(join(root, "sources.json"), "utf8"));
   validate(sources);
   const skills = join(root, "skills");
+  const licenses = join(root, "licenses");
   const lockPath = join(root, "sources.lock.json");
-  for (const path of [skills, lockPath]) {
+  for (const path of [skills, licenses, lockPath]) {
     if (lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink()) throw new Error(`Refusing an output symlink: ${path}`);
   }
 
@@ -95,15 +96,21 @@ export function syncSkills(root, date = new Date()) {
         throw new Error(`Missing SKILL.md or license for ${source.id}`);
       }
       cpSync(skillPath, prepared, { recursive: true, filter: (path) => basename(path) !== ".git" });
-      cpSync(licensePath, join(prepared, "LICENSE"));
+      const preparedLicense = join(temporary, "licenses", source.id);
+      mkdirSync(preparedLicense, { recursive: true });
+      cpSync(licensePath, join(preparedLicense, "LICENSE"));
       lock.sources[source.id] = { repository: source.repository, ref: source.ref, path: source.path, license: source.license, commit };
     }
 
     mkdirSync(skills, { recursive: true });
+    mkdirSync(licenses, { recursive: true });
     for (const { id } of sources) {
       const destination = join(skills, id);
       rmSync(destination, { recursive: true, force: true });
       cpSync(join(temporary, "prepared", id), destination, { recursive: true });
+      const licenseDestination = join(licenses, id);
+      rmSync(licenseDestination, { recursive: true, force: true });
+      cpSync(join(temporary, "licenses", id), licenseDestination, { recursive: true });
     }
     writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
     return lock;
