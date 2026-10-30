@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "checkedWeek": "2026-10-19",
+  "checkedWeek": "2026-10-26",
   "sources": {
     "gt": {
       "repository": "https://gitea.com/gitea/cli.git",
