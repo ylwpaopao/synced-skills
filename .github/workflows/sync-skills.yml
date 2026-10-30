@@ -40,7 +40,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add -- skills sources.lock.json
+          git add -- skills licenses sources.lock.json
           if git diff --cached --quiet; then
             echo "Upstream skills and weekly check marker are unchanged."
             exit 0
