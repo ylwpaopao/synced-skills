@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "checkedWeek": "2026-11-02",
+  "checkedWeek": "2026-11-09",
   "sources": {
     "gt": {
       "repository": "https://gitea.com/gitea/cli.git",
       "ref": "main",
       "path": "skills/gt",
       "license": "LICENSE",
-      "commit": "83e1b985daf7ed8569ffe196e81de82000c0034ea9ae8defa779a860a99becfd"
+      "commit": "03db312892302c481d16be6bff9480e656a747e8fcbfeaf5b2463bc0ed79138d"
     }
   }
 }

@@ -43,6 +43,9 @@ EOF
 gt issue create --template bug --title "Crash on empty config" --no-input --json number,url
 gt issue close 17 --comment "Fixed in #18." --no-input
 gt issue reopen 17 --comment "Still happens on main." --no-input
+gt issue lock 17 --reason Resolved --no-input     # unlock, pin and unpin work the same way
+gt issue delete 17 --yes --no-input                # for good, with its comments; issues only
+gt pr lock 18 --reason Resolved --no-input        # pr unlock, pin, unpin and delete too; pull requests only
 ```
 
 - Labels, a milestone, assignees and a due date need write access to the repository's issues.
@@ -50,7 +53,7 @@ gt issue reopen 17 --comment "Still happens on main." --no-input
 - `--template` starts from a repository issue template; without a terminal it requires
   `--title`.
 - Closing and reopening ask no confirmation and are visible to everyone: only when the user
-  asks.
+  asks. Locking and pinning are too. Deleting asks first (`--yes` skips it) and cannot be undone.
 
 ## Working on an issue
 
@@ -190,6 +193,7 @@ gt repo list OWNER -L 100 --no-input --json full_name,description,archived
 gt repo fork --add-remote --no-input
 gt repo edit --description "A short description" --add-topic cli --no-input
 gt repo edit --enable-wiki=false --no-input
+gt branch protection list --no-input --json rule,required_approvals,push_users,status_check_required,status_checks   # the first rule that matches a branch applies
 ```
 
 - `gt repo edit` changes only the flags passed; on/off settings take `=false` to turn off.
@@ -200,8 +204,11 @@ gt repo edit --enable-wiki=false --no-input
 ## Releases and wiki
 
 ```sh
-gt release list -L 5 --no-input --json tag,title,draft,published_at
+gt release list -L 5 --no-input --json tag,title,draft,published_at   # --exclude-drafts, --exclude-pre-releases, --order asc
 gt release create v1.2.0 dist/app.tar.gz --notes-file CHANGELOG.md --draft --no-input
+gt tag list -L 5 --no-input --json name,commit,annotated
+gt tag create v1.2.0 --target main --message "Version 1.2.0" --no-input   # a tag without a release
+gt tag protection list --no-input --json name_pattern,users,teams
 gt wiki list --no-input --json title
 gt wiki view Home --no-input --json body
 gt wiki create "Release process" --body-file docs/release.md --no-input
