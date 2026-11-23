@@ -21,9 +21,9 @@ gt search repo cli --owner gitea --no-input --json full_name,description
 - The query is a plain search string. Filter with flags (`--label`, `--author`, `--state`)
   rather than GitHub-style qualifiers such as `is:open`; Gitea's search API takes these
   filters as separate parameters.
-- `@me` stands for the signed-in user in `--author`, `--assignee` and, on issues only,
-  `gt issue list --mentions @me`. `gt search issue` and `gt search pr` have switches
-  instead: `gt search issue --assigned --mentioned --no-input`.
+- `@me` stands for the signed-in user in `--author`, `--assignee` and `--mentions`, as in
+  `gt search issue --assignee @me --no-input`. Without `--repo`, `gt search` takes only `@me`
+  for `--assignee` and `--mentions`.
 - Results stop at `-L` (default 30). An empty result exits 0; check the count, not the exit
   code, before saying nothing exists.
 - `--since` and `--until` take a date, an RFC3339 timestamp or a duration ago (`24h`).

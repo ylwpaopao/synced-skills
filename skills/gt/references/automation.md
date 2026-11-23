@@ -27,6 +27,9 @@ export GITEA_CLI_REPO=OWNER/REPO                  # optional, like --repo
 gt auth status --no-input --verify --json host,user,verified,error
 ```
 
+- The token needs the scopes of the commands it runs, such as `read:repository` to read a
+  repository and `write:issue` to change issues. Without `read:user`, `@me`, `--user`, a
+  repository named without its owner and commands about the token's own account exit 4.
 - Environment credentials are never written to `config.yml` or `hosts.yml`. Never put a token
   in a file, a command line that gets logged, or a comment body.
 - `GITEA_INSTANCE_INSECURE=true` skips TLS verification for that token's instance; use it

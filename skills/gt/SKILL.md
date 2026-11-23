@@ -31,11 +31,19 @@ instead of assuming `gh` behaviour.
 
 - Pass `--no-input` on every command so gt never waits for a prompt or opens an editor on its
   own, and never pass `--editor` or `--web`, which open one even then.
-- Read with `--json` and filter with `--jq`; the text output is for people and may change.
-  `--jq` runs inside gt, so `jq` need not be installed, and strings print without quotes.
+- To extract values, name the fields: `--json number,title`, filtered with `--jq`. `--jq`
+  without `--json` reads every field, so `--jq .` prints bodies too and costs many times the
+  tokens of the same list as text. `--jq` runs inside gt, so `jq` need not be installed, and
+  strings print without quotes. A field without a value is `null`, an empty list `[]`.
+- To only look at something, the plain text output is the smallest: tab-separated rows without
+  a header for lists, and `key:<TAB>value` lines, `--`, then the body for one item. It is for
+  reading and may change, so never parse it in a script. Commit IDs are cut to twelve
+  characters there; `--json` has them in full.
+- Every gt command opens a new connection, so prefer one command to several: `gt pr view 18
+  --comments` rather than a view and a comment list, `gt run view 34` for a run with its jobs.
   `--template` formats the JSON with a Go template when a layout is wanted rather than data
   (`gt help formatting` lists its functions); prefer `--jq` for scripts.
-- An unknown `--json` field fails and names the available ones; `gt help formatting`
+- `--json` without fields, or with an unknown one, fails and names the available ones; `gt help formatting`
   explains fields that cost extra requests.
 - Without a terminal, confirmations fail with exit code 2. Pass `--yes` only after the user
   agreed to that action: deletes, merges, branch cleanup, pushing a new branch from
@@ -59,7 +67,8 @@ gt run logs https://gitea.example.com/OWNER/REPO/actions/runs/34/jobs/71 --no-in
 ```
 
 An Actions check's `url` is its job URL, and `gt run logs` accepts that URL to print just
-that job. From a run ID instead, print the logs of every failed or canceled job:
+that job. From a run ID instead, print the failed steps of every failed or canceled job;
+`--tail 100` keeps only the end of each:
 
 ```sh
 gt run list --branch feature/login --status failure -L 5 --no-input --json id,workflow,title,conclusion
@@ -111,7 +120,7 @@ of the diff; gt refuses lines outside the diff. See [resources.md](references/re
 | --- | --- | --- |
 | Checks of a pull request | `gt pr checks 12` | [monitoring.md](references/monitoring.md) |
 | Wait for checks | `gt pr checks 12 --watch` | [monitoring.md](references/monitoring.md) |
-| Logs of failed or canceled jobs | `gt run logs 34 --failed` | [monitoring.md](references/monitoring.md) |
+| Logs of the failed steps | `gt run logs 34 --failed` | [monitoring.md](references/monitoring.md) |
 | Follow a running job | `gt run logs 34 --job build --follow` | [monitoring.md](references/monitoring.md) |
 | Rerun failed or canceled jobs | `gt run rerun 34 --failed` | [monitoring.md](references/monitoring.md) |
 | Download artifacts | `gt run download 34 --name build` | [monitoring.md](references/monitoring.md) |
@@ -135,7 +144,7 @@ of the diff; gt refuses lines outside the diff. See [resources.md](references/re
 
 ## Authentication and targeting
 
-- `gt auth status --no-input --json` reports each account; read `credential_available` and
+- `gt auth status --no-input --json host,user,credential_available,verified,error` reports each account; read `credential_available` and
   `verified` (add `--verify` to check against the server). With `--json` it exits 0 even when
   something is wrong; without it, missing or rejected credentials exit 4.
 - In CI, set `GITEA_TOKEN` with `GITEA_CLI_HOST` (or `GITEA_INSTANCE_URL`); environment
@@ -154,7 +163,7 @@ of the diff; gt refuses lines outside the diff. See [resources.md](references/re
 | 1 | The command failed, `gt pr checks` found a failed check, or the instance did not respond within `http_timeout` |
 | 2 | Usage error, or a confirmation that needs `--yes` |
 | 3 | Canceled: a declined confirmation or prompt, or a wait's `--timeout` expired |
-| 4 | Authentication missing or rejected |
+| 4 | Authentication missing or rejected, or the token lacks a needed scope |
 | 5 | `gt run watch` and `gt workflow run --follow`: the run completed without success |
 | 6 | `gt run watch --expect-head`: the run is for another commit; `gt pr merge`: the head is not the commit to merge, such as the one `--match-head-commit` names |
 | 8 | `gt pr checks`: checks still pending |
@@ -164,7 +173,7 @@ of the diff; gt refuses lines outside the diff. See [resources.md](references/re
 
 ## Validation checklist
 
-1. `gt --version` works and `gt auth status --no-input --json` shows a credential.
+1. `gt --version` works and `gt auth status --no-input --json host,credential_available` shows a credential.
 2. `gt repo view --no-input --json full_name` names the intended repository.
 3. Reads use `--json`; every write was approved by the user.
 4. After `gt pr create`, `gt pr view --no-input --json url` gives the link to report.

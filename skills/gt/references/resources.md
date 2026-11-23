@@ -42,6 +42,7 @@ gt issue create --no-input --title "Crash on empty config" --label bug --json nu
 Steps to reproduce, expected and actual behaviour.
 EOF
 gt issue create --template bug --title "Crash on empty config" --no-input --json number,url
+gt issue create --title "Add a retry" --blocked-by 12 --blocking 15 --no-input --json number   # waits for #12, holds up #15
 gt issue close 17 --comment "Fixed in #18." --no-input
 gt issue reopen 17 --comment "Still happens on main." --no-input
 gt issue lock 17 --reason Resolved --no-input     # unlock, pin and unpin work the same way
@@ -88,7 +89,7 @@ gt pr view --no-input --json number,url,state,draft
   merged.
 - Follow the repository's own contribution rules (title style, sign-off, templates) when they
   exist; read `CONTRIBUTING.md` before writing the title.
-- Useful flags: `--reviewer`, `--label`, `--milestone`, `--assignee @me`, `--head OWNER:BRANCH`
+- Useful flags: `--reviewer` (users, or teams as `ORG/TEAM`), `--label`, `--milestone`, `--assignee @me`, `--head OWNER:BRANCH`
   for a fork branch, `--agit` for AGit flow without a fork.
 
 ## Updating the pull request
@@ -193,7 +194,8 @@ so it also needs the user's request; on a conflict it changes nothing and fails.
 
 ```sh
 gt repo view --no-input --json full_name,default_branch,private,actions_enabled
-gt repo list OWNER -L 100 --no-input --json full_name,description,archived
+gt repo list OWNER -L 100 --no-input --json full_name,description,archived   # --visibility, --archived, --no-archived, --topic, --language
+gt label list --search bug --sort name --order desc --no-input --json name,color   # --web opens the label page and takes no other flag but --org
 gt repo fork --add-remote --no-input
 gt repo edit --description "A short description" --add-topic cli --no-input
 gt repo edit --enable-wiki=false --no-input

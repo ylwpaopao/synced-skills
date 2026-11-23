@@ -53,21 +53,25 @@ gt run jobs 34 --no-input --json id,name,conclusion,steps
 ## Reading logs
 
 ```sh
-gt run logs 34 --failed --no-input                     # every failed or canceled job
-gt run logs 34 --job build --no-input                  # one job, by name or ID
+gt run logs 34 --failed --no-input                     # the failed steps of every failed or canceled job
+gt run logs 34 --failed --tail 100 --no-input          # only the end of each
+gt run logs 34 --job build --no-input                  # one whole job, by name or ID
 gt run logs https://gitea.example.com/OWNER/REPO/actions/runs/34/jobs/71 --no-input
 gt run logs 34 --job build --follow --no-input         # stream until the job completes
 gt run logs 34 --output logs.zip --no-input            # whole run as a ZIP archive
 ```
 
-- The log goes to stdout and each job's name to stderr, so `2>/dev/null` leaves pure log.
+- The log goes to stdout and each job's name to stderr, with the names of its failed steps
+  under `--failed`, so `2>/dev/null` leaves pure log.
+- Lines print without the timestamp Gitea starts them with; `--timestamps` keeps it.
+- `--failed` prints the whole log of a job that reports no failed step, such as a canceled one.
 - Logs can be long. Search them (`| grep -n -i -E 'error|fail|panic'`) or read the end
-  (`| tail -n 200`) before loading everything.
+  (`--tail 200`) before loading everything.
 - `gt repo activity [REPOSITORY] --no-input --json type,actor,repository,created_at` lists what happened lately in a repository, and
-  `gt activity [OWNER] --no-input --json ...` the feed of a user (what they did and what happened in repositories they watch) or
+  `gt activity [OWNER] --no-input --json type,actor,repository,created_at` the feed of a user (what they did and what happened in repositories they watch) or
   organization; `--date YYYY-MM-DD` keeps one day in the server's time zone.
 - `gt run view 34 --log --no-input` prints the logs of every job instead of the run summary; `--log-failed`
-  prints those of the jobs that failed, and `--job build` narrows the view or the logs to one job.
+  prints those of the failed steps, like `gt run logs --failed`, and `--job build` narrows the view or the logs to one job.
 - Steps are in `gt run jobs 34 --json steps`: a failed step's name narrows where to look.
 
 From a failing check straight to its log:
